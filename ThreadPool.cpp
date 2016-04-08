@@ -44,6 +44,7 @@ void* ThreadPool::wrapper(void* arg)
 	{
 		worker.task.func(worker.task.arg);
 		std::cout << "run:" << worker.id << " int:" << (long )worker.task.arg<< std::endl;
+		pthread_mutex_lock(&worker.mutex);
 		pthread_mutex_lock(&pool.mutex);
 		if (!pool.tasks.empty())
 		{
@@ -60,10 +61,9 @@ void* ThreadPool::wrapper(void* arg)
 			if (pool.idleworkers.size() == pool.workercounter)
 				pthread_cond_signal(&pool.allidle);
 			pthread_mutex_unlock(&pool.mutex);
-			pthread_mutex_lock(&worker.mutex);
 			pthread_cond_wait(&worker.cond, &worker.mutex);
-			pthread_mutex_unlock(&worker.mutex);
 		}
+		pthread_mutex_unlock(&worker.mutex);
 	}
 	pthread_mutex_destroy(&worker.mutex);
 	pthread_cond_destroy(&worker.cond);
